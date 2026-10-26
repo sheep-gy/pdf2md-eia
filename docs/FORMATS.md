@@ -164,5 +164,5 @@ PPTX 暂不支持；如有需要可在后续版本增加。
 - 输出默认保留原目录层级。
 
 ```bat
-PDF转MD.exe batch "D:\报告" -o "D:\md" --pattern "" --workers 2
+EIA-report-to-md.exe batch "D:\报告" -o "D:\md" --pattern "" --workers 2
 ```

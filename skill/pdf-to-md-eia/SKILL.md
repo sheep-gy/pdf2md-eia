@@ -12,13 +12,13 @@ description: Convert Chinese environmental impact assessment (EIA / 环评) PDFs
 
 ## 0. 这个 skill 在哪里、AI 先读什么
 
-- 本 skill 随 **PDF转MD_桌面版** 一起分发，位置：`<包目录>\skill\pdf-to-md-eia\`
+- 本 skill 随 **EIA-report-to-md** 一起分发，位置：`<包目录>\skill\pdf-to-md-eia\`
 - 包根目录还有：
   - `AI调用说明.md`：给其他 AI 的最短调用步骤（先读这个）
   - `AI调用示例.py`：Python 客户端示例
   - `API接口.md`：HTTP 接口字段与示例
 - `references/gui.md`：桌面版首次自检、自动安装、进度说明
-- 只是调用转换：启动 `PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 密钥`，
+- 只是调用转换：启动 `EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 密钥`，
   先 `GET /capabilities`，再 `POST /convert`。
 - 第一次在新机器上部署：让用户在 GUI 首次运行里点“开始安装并配置”，
   程序会自动下载 uv、Python 3.12、MinerU、基础/增强模型；检测到 NVIDIA 显卡时
@@ -57,7 +57,7 @@ curl -s http://127.0.0.1:8765/capabilities
 或运行：
 
 ```bash
-PDF转MD.exe capabilities
+EIA-report-to-md.exe capabilities
 python scripts/detect_gpu.py
 ```
 
@@ -81,7 +81,7 @@ python scripts/detect_gpu.py
 服务端在装了 MinerU 的机器上跑：
 
 ```bash
-PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 ```
 
 客户端：
@@ -116,14 +116,14 @@ curl -s -X POST http://<服务器IP>:8765/convert \
 
 ### B. exe 命令行
 
-桌面位置：`PDF转MD_桌面版\PDF转MD.exe`
+桌面位置：`EIA-report-to-md\EIA-report-to-md.exe`
 （exe 必须和 `_internal` 同目录；MinerU 环境/模型仍在 `D:\mineru_env`、`D:\mineru_home`）
 
 ```bat
-PDF转MD.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
-PDF转MD.exe batch "D:\下载\各省环评报告" -o "D:\环评md" --pattern 报告书 --workers 2 --device auto
-PDF转MD.exe serve --host 0.0.0.0 --port 8765
-PDF转MD.exe capabilities
+EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
+EIA-report-to-md.exe batch "D:\下载\各省环评报告" -o "D:\环评md" --pattern 报告书 --workers 2 --device auto
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765
+EIA-report-to-md.exe capabilities
 ```
 
 把 PDF 直接拖到 exe 上，等同 `convert`。

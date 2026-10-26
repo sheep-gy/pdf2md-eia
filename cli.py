@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""PDF转MD 统一入口（CLI + API）。
+"""EIA report to md 统一入口（CLI + API）。
 
 用法：
-  PDF转MD.exe convert "某报告.pdf" -o "输出目录"
-  PDF转MD.exe batch "D:\\下载\\各省环评报告" -o "D:\\环评md" --pattern 报告书 --workers 2
-  PDF转MD.exe serve --host 0.0.0.0 --port 8765
-  PDF转MD.exe capabilities
-  PDF转MD.exe version
+  EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录"
+  EIA-report-to-md.exe batch "D:\\下载\\各省环评报告" -o "D:\\环评md" --pattern 报告书 --workers 2
+  EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765
+  EIA-report-to-md.exe capabilities
+  EIA-report-to-md.exe version
 
 也可以把 PDF 直接拖到 exe 上（等同 convert）。
 """

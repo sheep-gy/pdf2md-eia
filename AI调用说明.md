@@ -1,6 +1,6 @@
 # 给 AI / 自动化程序的调用说明
 
-> 本文件是 `PDF转MD_桌面版` 的 AI 入口。  
+> 本文件是 `EIA-report-to-md` 的 AI 入口。  
 > 更完整的技能说明在：`skill\pdf-to-md-eia\SKILL.md`  
 > 接口字段在：`API接口.md` 和 `skill\pdf-to-md-eia\references\api.md`
 
@@ -25,8 +25,8 @@
 
 | 使用者 | 方式 |
 |---|---|
-| 人 | 双击 `PDF转MD.exe`，用图形界面 |
-| AI / 自动化 | 带参数运行 `PDF转MD.exe`，或启动 HTTP 服务 |
+| 人 | 双击 `EIA-report-to-md.exe`，用图形界面 |
+| AI / 自动化 | 带参数运行 `EIA-report-to-md.exe`，或启动 HTTP 服务 |
 
 双击默认进 GUI；带参数运行仍然是命令行。exe 是 GUI 子系统，不会弹黑框；
 命令行模式会自动附加到当前控制台，输出正常。
@@ -38,7 +38,7 @@
 在装了 MinerU 的机器上：
 
 ```bat
-PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 ```
 
 - 内网使用也必须设 `--token`；请求头：
@@ -101,11 +101,11 @@ curl -s "http://<服务器IP>:8765/jobs/<job_id>/result?max_chars=200000"
 ## 4. 命令行（不启服务，单机批量）
 
 ```bat
-PDF转MD.exe capabilities
-PDF转MD.exe version
+EIA-report-to-md.exe capabilities
+EIA-report-to-md.exe version
 
-PDF转MD.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
-PDF转MD.exe batch "D:\下载\各省环评报告" -o "D:\环评md" --pattern 报告书 --workers 2 --device auto
+EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
+EIA-report-to-md.exe batch "D:\下载\各省环评报告" -o "D:\环评md" --pattern 报告书 --workers 2 --device auto
 ```
 
 - `capabilities` 永远是第一步。
@@ -178,7 +178,7 @@ set PDF2MD_TOKEN=你的密钥
 
 ## 8. 第一次在新机器上部署
 
-推荐让用户双击 `PDF转MD.exe`，首次运行会：
+推荐让用户双击 `EIA-report-to-md.exe`，首次运行会：
 
 1. 自检 CPU/内存/显卡/磁盘；
 2. 计算推荐并发；
@@ -189,13 +189,13 @@ set PDF2MD_TOKEN=你的密钥
 6. 显示“正在下载/已下载多少/正在安装”的进度，全部完成后弹窗。
 
 如果服务端是无界面的服务器，可以让用户先在桌面跑一次 GUI 完成安装，
-之后再只用 `PDF转MD.exe serve`；或者按
+之后再只用 `EIA-report-to-md.exe serve`；或者按
 `skill\pdf-to-md-eia\references\installation.md` 手动安装。
 
 **离线使用**：转换本身完全离线；只有首次安装依赖需要联网。
 离线部署时，建议在联网机器上把安装目录设成与离线机器相同的路径
 （例如都用 `D:\PDF2MD_runtime`），装好 MinerU、模型、LibreOffice/CUDA 后，
-把 `PDF转MD_桌面版` 文件夹和整个运行时目录按原路径拷过去。
+把 `EIA-report-to-md` 文件夹和整个运行时目录按原路径拷过去。
 venv 脚本记录绝对路径，换路径可能失效；不要只拷 exe。
 
 ---

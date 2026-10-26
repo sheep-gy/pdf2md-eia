@@ -22,7 +22,7 @@
 | PyMuPDF 2.0 / pdfplumber 0.11.10 / Flask | `D:\mineru_env` |
 | basic ONNX 模型（819 MB） | `D:\mineru_home\models\MinerU-4_models_onnx` |
 | standard VLM 模型（1.2 GB） | `D:\mineru_home\models\MinerU2.5-Pro-2605-1.2B-GGUF` |
-| 转换程序 exe | `PDF转MD_桌面版\PDF转MD.exe` |
+| 转换程序 exe | `EIA-report-to-md\EIA-report-to-md.exe` |
 
 ---
 

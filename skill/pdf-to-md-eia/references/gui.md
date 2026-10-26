@@ -1,6 +1,6 @@
 # 桌面版 GUI 与首次自动安装
 
-本文件说明 `PDF转MD_桌面版` 的图形界面、首次自检和自动安装流程，
+本文件说明 `EIA-report-to-md` 的图形界面、首次自检和自动安装流程，
 方便其他 AI 指导用户完成部署。
 
 ## 0. 支持格式
@@ -11,7 +11,7 @@
 
 ## 1. 启动
 
-双击 `PDF转MD.exe`。exe 是 GUI 子系统，不会出现黑色控制台。
+双击 `EIA-report-to-md.exe`。exe 是 GUI 子系统，不会出现黑色控制台。
 
 首次启动会做一次自检，然后弹窗：
 
@@ -76,7 +76,7 @@
 - 转换本身完全离线（PDF 用本地 MinerU，Office 用本地库/LibreOffice）。
 - 首次安装依赖需要联网（Python/MinerU/模型/LibreOffice/CUDA）。
 - 离线部署：在联网机器上把安装目录设成与离线机器相同的路径，
-  装完后把 `PDF转MD_桌面版\` 和运行时目录按原路径拷贝过去。
+  装完后把 `EIA-report-to-md\` 和运行时目录按原路径拷贝过去。
   venv 记录绝对路径，换路径可能失效；不要只拷 exe。
 
 ## 6. 给其他 AI 的建议
@@ -84,7 +84,7 @@
 如果你的用户要在新机器上部署：
 
 1. 让用户双击 exe，按弹窗完成自检和自动安装（只需点一次“开始安装并配置”）。
-2. 安装完成后，再启动 `PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 密钥`。
+2. 安装完成后，再启动 `EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 密钥`。
 3. 调用前先 `GET /capabilities`，按 `recommended` 传 `device` / `tier`。
 4. 不要假设 CUDA 已就绪；以 `backend_ready` 为准。
 5. 中文路径已支持；若个别引擎仍报 Unicode 错误，再把环境/模型改到英文路径。

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """隐藏子命令：单个 PDF 转换，进度写 progress.jsonl，结果写 result.json。
 
-由 GUI 以 `PDF转MD.exe _job <job.json>` 启动，不读 stdin、不打印、不暂停。
+由 GUI 以 `EIA-report-to-md.exe _job <job.json>` 启动，不读 stdin、不打印、不暂停。
 """
 import json
 import os

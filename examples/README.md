@@ -6,8 +6,8 @@
 试转：
 
 ```bat
-PDF转MD.exe convert "examples\样例报告.docx" -o "out"
-PDF转MD.exe convert "examples\样例数据.xlsx" -o "out"
+EIA-report-to-md.exe convert "examples\样例报告.docx" -o "out"
+EIA-report-to-md.exe convert "examples\样例数据.xlsx" -o "out"
 ```
 
-或直接把文件拖到 `PDF转MD.exe` 上。
+或直接把文件拖到 `EIA-report-to-md.exe` 上。

@@ -2,11 +2,11 @@
 from pathlib import Path
 
 PROJECT = Path(SPECPATH)
-APP_NAME = "PDF转MD"
+APP_NAME = "EIA-report-to-md"
 
 # 随包分发的文档与 skill
 DOC_DATAS = [
-    (str(PROJECT / "assets" / "PDF转MD.ico"), "assets"),
+    (str(PROJECT / "assets" / "EIA-report-to-md.ico"), "assets"),
     (str(PROJECT / "使用说明_GUI.txt"), "."),
     (str(PROJECT / "AI调用说明.md"), "."),
     (str(PROJECT / "AI调用示例.py"), "."),
@@ -56,9 +56,9 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,
-    icon=str(PROJECT / "assets" / "PDF转MD.ico"),
+    icon=str(PROJECT / "assets" / "EIA-report-to-md.ico"),
     version=str(PROJECT / "assets" / "version_info.txt"),
-    manifest=str(PROJECT / "assets" / "PDF转MD.manifest"),
+    manifest=str(PROJECT / "assets" / "EIA-report-to-md.manifest"),
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

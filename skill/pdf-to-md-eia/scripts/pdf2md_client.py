@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PDF转MD API 客户端（给其他 AI / 其他电脑用）。
+"""EIA report to md API 客户端（给其他 AI / 其他电脑用）。
 
 用法：
   set PDF2MD_URL=http://192.168.1.10:8765

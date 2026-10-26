@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""PDF转MD 主窗口（Tkinter）。"""
+"""EIA report to md 主窗口（Tkinter）。"""
 from __future__ import annotations
 
 import os
@@ -19,7 +19,7 @@ from .platform_win import (acquire_single_instance, activate_window,
                            recommend_workers, set_dpi_awareness,
                            restore_aux_windows)
 
-APP_TITLE = "PDF转MD · 环评报告转 Markdown"
+APP_TITLE = "EIA report to md"
 STATUS_TAG = {
     "等待": "wait", "扫描中": "wait", "转换中": "run",
     "完成": "ok", "失败": "bad", "跳过": "skip",
@@ -101,8 +101,8 @@ class App(tk.Tk):
         style.configure("BannerWarn.TFrame", background="#fff8e1")
 
     def _set_icon(self):
-        for p in (settings.resource_dir() / "assets" / "PDF转MD.ico",
-                  settings.app_dir() / "assets" / "PDF转MD.ico"):
+        for p in (settings.resource_dir() / "assets" / "EIA-report-to-md.ico",
+                  settings.app_dir() / "assets" / "EIA-report-to-md.ico"):
             if p.exists():
                 try:
                     self.iconbitmap(str(p))
@@ -944,7 +944,7 @@ class App(tk.Tk):
                      f"\nGPU: {(hw.gpu or {}).get('name') or '未检测到'}")
         messagebox.showinfo(
             "关于",
-            f"PDF转MD 2.0.0\n"
+            f"EIA report to md 2.0.0\n"
             f"环境: {self.cfg.env_dir}\n"
             f"模型: {self.cfg.mineru_home}{extra}",
             parent=self)

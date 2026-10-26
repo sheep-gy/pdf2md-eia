@@ -1,4 +1,4 @@
-PDF转MD 2.0 使用说明
+EIA report to md 2.0 使用说明
 ========================================
 
 使用声明
@@ -10,7 +10,7 @@ PDF转MD 2.0 使用说明
 
 一、怎么用
 ----------------------------------------
-1. 双击 PDF转MD.exe（首次启动会先自检，约几秒）。
+1. 双击 EIA-report-to-md.exe（首次启动会先自检，约几秒）。
 2. 首次运行会弹窗显示：
    · 本机 CPU / 内存 / 显卡 / 磁盘
    · 建议并发数（按可用内存和物理核数算）
@@ -52,18 +52,18 @@ PDF转MD 2.0 使用说明
 
 五、命令行/API 仍然可用
 ----------------------------------------
-PDF转MD.exe capabilities
-PDF转MD.exe version
-PDF转MD.exe convert "某报告.pdf" -o "输出目录"
-PDF转MD.exe batch "报告目录" -o "输出目录" --pattern 报告书 --workers 2
-PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+EIA-report-to-md.exe capabilities
+EIA-report-to-md.exe version
+EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录"
+EIA-report-to-md.exe batch "报告目录" -o "输出目录" --pattern 报告书 --workers 2
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 
 双击默认进图形界面；带参数运行仍是原来的命令行行为。
 
 六、常见问题
 ----------------------------------------
 Q 双击后一闪而过？
-  必须把 PDF转MD.exe 和 _internal\ 放在同一目录，不能只拷 exe。
+  必须把 EIA-report-to-md.exe 和 _internal\ 放在同一目录，不能只拷 exe。
 
 Q 安装失败？
   弹窗会显示失败步骤和日志。优先检查网络/磁盘空间；
@@ -99,7 +99,7 @@ Q 中文路径能用吗？
   5. AI调用示例.py / skill\...\scripts\pdf2md_client.py  ← Python 客户端
 
 启动服务：
-  PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+  EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 
 调用顺序：
   GET  /capabilities   ← 必须先看，按 recommended 传 device/tier
@@ -108,9 +108,9 @@ Q 中文路径能用吗？
   GET  /jobs/<id>/download  ← 取 md
 
 单机命令行：
-  PDF转MD.exe capabilities
-  PDF转MD.exe convert "某报告.pdf" -o "输出目录"
-  PDF转MD.exe batch "报告目录" -o "输出目录" --pattern 报告书 --workers 2
+  EIA-report-to-md.exe capabilities
+  EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录"
+  EIA-report-to-md.exe batch "报告目录" -o "输出目录" --pattern 报告书 --workers 2
 
 注意：
   · 不要调用内部命令 _job（那是 GUI 用的）
@@ -156,10 +156,10 @@ Q 中文路径能用吗？
      （例如都选 D:\PDF2MD_runtime）。
   2. 安装时把需要的模型/LibreOffice/CUDA 都装好。
   3. 把下面三样按原路径拷到离线机器：
-       PDF转MD_桌面版\        （exe 和 _internal）
+       EIA-report-to-md\        （exe 和 _internal）
        D:\PDF2MD_runtime\      （mineru_env + mineru_home）
        如果模型装在其他盘，也按原路径一起拷。
-  4. 不要只拷 PDF转MD.exe：exe 里不含 MinerU 和模型。
+  4. 不要只拷 EIA-report-to-md.exe：exe 里不含 MinerU 和模型。
 
   注意：Python 环境里的脚本记录的是绝对路径，换盘符/换目录后可能失效；
   离线部署时尽量保持安装路径一致。如果离线机器没有 Python，

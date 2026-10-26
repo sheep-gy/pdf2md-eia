@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""构建 PDF转MD 桌面版（PyInstaller onedir）。"""
+"""构建 EIA report to md 桌面版（PyInstaller onedir）。"""
 import os
 import shutil
 import subprocess
@@ -8,13 +8,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 PY = Path(os.environ.get("PDF2MD_PY", sys.executable))
-DIST = HERE / "dist" / "PDF转MD"
+DIST = HERE / "dist" / "EIA-report-to-md"
 
 def main():
     if not (HERE / "tools" / "uv.exe").exists():
         raise SystemExit("缺少 tools/uv.exe；请先放入 uv。")
     cmd = [str(PY), "-m", "PyInstaller", "--clean", "--noconfirm",
-           str(HERE / "PDF转MD.spec")]
+           str(HERE / "EIA-report-to-md.spec")]
     print("运行:", " ".join(cmd))
     subprocess.run(cmd, cwd=str(HERE), check=True)
     if (HERE / "使用说明_GUI.txt").exists():
@@ -26,7 +26,7 @@ def main():
             shutil.copyfile(src, DIST / name)
     if (HERE / "skill").exists():
         shutil.copytree(HERE / "skill", DIST / "skill", dirs_exist_ok=True)
-    print("完成:", DIST / "PDF转MD.exe")
+    print("完成:", DIST / "EIA-report-to-md.exe")
 
 if __name__ == "__main__":
     main()

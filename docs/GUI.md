@@ -88,11 +88,11 @@ DOCX/XLSX 不需要 LibreOffice。
 命令行和 GUI 是同一个 exe：
 
 ```bat
-PDF转MD.exe capabilities
-PDF转MD.exe convert "某报告.pdf" -o "输出目录"
-PDF转MD.exe convert "某文件.docx" -o "输出目录"
-PDF转MD.exe batch "报告目录" -o "输出目录" --pattern "" --workers 2
-PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+EIA-report-to-md.exe capabilities
+EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录"
+EIA-report-to-md.exe convert "某文件.docx" -o "输出目录"
+EIA-report-to-md.exe batch "报告目录" -o "输出目录" --pattern "" --workers 2
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 ```
 
 详见 [AI调用说明.md](../AI调用说明.md) 和 [API.md](API.md)。

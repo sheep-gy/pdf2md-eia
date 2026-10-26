@@ -40,7 +40,7 @@ flowchart TB
 | `eia_md/` | 表格重建、单元格取字、原生页渲染、Markdown 渲染、GPU 检测 |
 | `batch.py` | 批量转换，保留目录层级，可断点续跑 |
 | `server.py` | Flask API：`/capabilities`、`/convert`、`/jobs/...` |
-| `build_gui.py` / `PDF转MD.spec` | PyInstaller onedir 打包 |
+| `build_gui.py` / `EIA-report-to-md.spec` | PyInstaller onedir 打包 |
 
 ---
 
@@ -196,7 +196,7 @@ sequenceDiagram
     participant U as 用户
     participant G as Tkinter GUI
     participant R as JobRunner
-    participant C as PDF转MD.exe _job
+    participant C as EIA-report-to-md.exe _job
     participant M as MinerU
     U->>G: 添加文件 / 开始转换
     G->>R: 创建任务

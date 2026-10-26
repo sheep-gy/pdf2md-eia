@@ -186,7 +186,7 @@ def activate_window(title: str) -> None:
     if os.name != "nt":
         return
     u = ctypes.windll.user32
-    titles = [title, "PDF转MD · 首次运行自检",
+    titles = [title, "EIA report to md · 首次运行自检",
               "安装 LibreOffice（旧版 DOC/XLS）"]
     seen = set()
     for t in titles:
@@ -215,7 +215,7 @@ def restore_aux_windows() -> None:
     if os.name != "nt":
         return
     u = ctypes.windll.user32
-    titles = {"PDF转MD · 首次运行自检", "安装 LibreOffice（旧版 DOC/XLS）"}
+    titles = {"EIA report to md · 首次运行自检", "安装 LibreOffice（旧版 DOC/XLS）"}
     try:
         CB = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
         def _cb(hwnd, lparam):

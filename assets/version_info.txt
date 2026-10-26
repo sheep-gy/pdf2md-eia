@@ -13,11 +13,11 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('080404b0', [
         StringStruct('CompanyName', 'OPC'),
-        StringStruct('FileDescription', 'PDF转MD 环评报告转 Markdown'),
+        StringStruct('FileDescription', 'EIA report to md 环评报告转 Markdown'),
         StringStruct('FileVersion', '2.0.0.0'),
-        StringStruct('InternalName', 'PDF转MD'),
-        StringStruct('OriginalFilename', 'PDF转MD.exe'),
-        StringStruct('ProductName', 'PDF转MD'),
+        StringStruct('InternalName', 'EIA-report-to-md'),
+        StringStruct('OriginalFilename', 'EIA-report-to-md.exe'),
+        StringStruct('ProductName', 'EIA report to md'),
         StringStruct('ProductVersion', '2.0.0.0')
       ])
     ]),

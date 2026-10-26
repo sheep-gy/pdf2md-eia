@@ -6,7 +6,7 @@
 tools/uv.exe
 ```
 
-`build_gui.py` 会把它打进 `dist/PDF转MD/_internal/tools/uv.exe`，
+`build_gui.py` 会把它打进 `dist/EIA report to md/_internal/tools/uv.exe`，
 用于首次运行时在没有 uv 的机器上离线创建 Python 环境。
 
 `uv.exe` 不随源码仓库提交（约 67 MB），可从

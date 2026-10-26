@@ -1,4 +1,4 @@
-# PDF转MD · 环评报告专用（pdf2md-eia）
+# EIA report to md · 环评报告专用（pdf2md-eia）
 
 把**中文环评报告、工程报告、Office 文档**转成 AI 可读的 Markdown。  
 重点不是“把字提出来”，而是**把复杂表格、合并单元格、扫描件、漏字页、页码锚点和质量指标一起做对**。
@@ -118,25 +118,25 @@ rem 3. 构建
 D:\mineru_env\Scripts\python.exe build_gui.py
 ```
 
-产物：`dist\PDF转MD\PDF转MD.exe`（onedir，需和 `_internal\` 一起分发）。  
+产物：`dist\EIA-report-to-md\EIA-report-to-md.exe`（onedir，需和 `_internal\` 一起分发）。  
 本仓库只含源码与文档，不包含 224 MB 的运行时和 2 GB 模型。
 
 ### 命令行
 
 ```bat
-PDF转MD.exe capabilities
-PDF转MD.exe version
+EIA-report-to-md.exe capabilities
+EIA-report-to-md.exe version
 
-PDF转MD.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
-PDF转MD.exe convert "某文件.docx" -o "输出目录"
-PDF转MD.exe convert "某文件.xlsx" -o "输出目录"
-PDF转MD.exe batch "报告目录" -o "输出目录" --pattern "" --workers 2
+EIA-report-to-md.exe convert "某报告.pdf" -o "输出目录" --device auto --tier basic
+EIA-report-to-md.exe convert "某文件.docx" -o "输出目录"
+EIA-report-to-md.exe convert "某文件.xlsx" -o "输出目录"
+EIA-report-to-md.exe batch "报告目录" -o "输出目录" --pattern "" --workers 2
 ```
 
 ### HTTP API
 
 ```bat
-PDF转MD.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
+EIA-report-to-md.exe serve --host 0.0.0.0 --port 8765 --token 你的密钥
 ```
 
 ```bash
@@ -278,7 +278,7 @@ QA 示例：
 
 - **转换本身完全离线**：PDF 本地 MinerU，Office 本地解析/LibreOffice，不上传。
 - **首次安装依赖需要联网**：Python/MinerU、模型、CUDA、LibreOffice。
-- 离线部署：在联网机器上把安装目录设成与离线机器相同的路径，装好后把 `PDF转MD_桌面版\` 和运行时目录按原路径拷贝；venv 脚本记录绝对路径，换路径可能失效。详见 [docs/OFFLINE.md](docs/OFFLINE.md)。
+- 离线部署：在联网机器上把安装目录设成与离线机器相同的路径，装好后把 `EIA-report-to-md\` 和运行时目录按原路径拷贝；venv 脚本记录绝对路径，换路径可能失效。详见 [docs/OFFLINE.md](docs/OFFLINE.md)。
 
 ---
 
@@ -306,12 +306,12 @@ pdf2md-eia/
 ├─ server.py              # HTTP API
 ├─ gui/                   # Tkinter 界面、安装向导、任务队列
 ├─ eia_md/                # 表格重建、文字提取、渲染、GPU 检测
-├─ assets/PDF转MD.ico     # 图标
+├─ assets/EIA-report-to-md.ico     # 图标
 ├─ skill/pdf-to-md-eia/   # 随包分发的 AI skill
 ├─ examples/              # DOCX/XLSX 示例
 ├─ docs/                  # 架构、格式、对比、离线、API
 ├─ build_gui.py           # PyInstaller 构建脚本
-├─ PDF转MD.spec           # onedir 打包配置
+├─ EIA-report-to-md.spec           # onedir 打包配置
 ├─ requirements.txt
 └─ LICENSE
 ```

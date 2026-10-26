@@ -31,7 +31,7 @@ class InstallWizard(tk.Toplevel):
         self._q: queue.Queue = queue.Queue()
         self._installing = False
 
-        self.title("PDF转MD · 首次运行自检")
+        self.title("EIA report to md · 首次运行自检")
         self.geometry("860x600")
         self.minsize(760, 520)
         self.transient(parent)

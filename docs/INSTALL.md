@@ -103,8 +103,8 @@ python build_gui.py
 产物：
 
 ```
-dist\PDF转MD\
-├─ PDF转MD.exe
+dist\EIA-report-to-md\
+├─ EIA-report-to-md.exe
 ├─ _internal\
 ├─ 使用说明.txt
 ├─ AI调用说明.md
@@ -113,7 +113,7 @@ dist\PDF转MD\
 └─ skill\pdf-to-md-eia\
 ```
 
-`PDF转MD.exe` 必须和 `_internal\` 同目录。
+`EIA-report-to-md.exe` 必须和 `_internal\` 同目录。
 
 ### 4.3 打包说明
 
@@ -129,7 +129,7 @@ dist\PDF转MD\
 | 现象 | 处理 |
 |---|---|
 | `No module named mineru` / `quality_tier_unavailable` | MinerU 环境或模型没装好；跑一次 GUI 首次安装，或按第 3 节手动装 |
-| GPU 未生效 | 先跑 `PDF转MD.exe capabilities`，看 `backend_ready`；false 时不要传 `cuda` |
+| GPU 未生效 | 先跑 `EIA-report-to-md.exe capabilities`，看 `backend_ready`；false 时不要传 `cuda` |
 | `No mapping for the Unicode character exists` | 中文路径已支持；极少数引擎仍报错时，把环境/模型换到英文路径 |
 | LibreOffice 安装失败 | 检查 winget、UAC、网络；或手动安装 LibreOffice |
 | 杀毒软件报警 | PyInstaller 程序常被误报，添加信任 |

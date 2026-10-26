@@ -35,10 +35,10 @@
 2. 安装目录选成和离线机器**完全相同**的路径，例如都用 `D:\PDF2MD_runtime`；
 3. 安装时把需要的模型、LibreOffice、CUDA 都装好；
 4. 把下面这些按原路径拷到离线机器：
-   - `PDF转MD_桌面版\`（exe + `_internal`）
+   - `EIA-report-to-md\`（exe + `_internal`）
    - `D:\PDF2MD_runtime\`（`mineru_env` + `mineru_home`）
    - 如果模型装在别的盘，也按原路径一起拷；
-5. 离线机器上双击 `PDF转MD.exe`，首次自检应显示“环境已就绪”。
+5. 离线机器上双击 `EIA-report-to-md.exe`，首次自检应显示“环境已就绪”。
 
 ### 为什么强调“同路径”
 
