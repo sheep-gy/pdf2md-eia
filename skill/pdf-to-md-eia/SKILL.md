@@ -69,8 +69,10 @@ python scripts/detect_gpu.py
 | `gpu.hardware = true` 但 `backend_ready = false` | 先按 `device="cpu"` 跑；要提速需装 `mineru[full]` 的 Torch/LMDeploy/vLLM 后端 |
 | `gpu.hardware = false` | `device="cpu"`，`tier="basic"` |
 
-**有独显就尽量走独显**，但只在 `backend_ready=true` 时声称“已用 GPU”。
-`hardware=true` 只代表机器有卡，不代表 MinerU 的 CUDA 后端装好了。
+**有 NVIDIA 独显就尽量走独显**，但只在 `backend_ready=true` 时声称“已用 GPU”。
+`hardware=true` 只代表机器有 NVIDIA 卡，不代表 MinerU 的 CUDA 后端装好了。
+AMD / Intel 集显没有 CUDA，按 `hardware=false` 处理，仍走 CPU；
+2.0.1 起单个 ≥20 页 PDF 会自动分页并行，不需要额外传参。
 
 ---
 
