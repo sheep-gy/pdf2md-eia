@@ -1,0 +1,33 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Build / release
+build/
+dist/
+*.spec.bak
+tools/uv.exe
+
+# Local runtime / heavy data
+.mineru/
+_corpus_probe.jsonl
+_test/
+_probe/
+示例输出/
+*.zip
+*.7z
+*.rar
+
+# Dev notes
+_dep_append.md
+_readme_append.md
+start_overnight.ps1
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

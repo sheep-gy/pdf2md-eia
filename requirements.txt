@@ -1,0 +1,9 @@
+# 运行 GUI / CLI / API 所需（不含 MinerU，MinerU 建议装在独立环境）
+pymupdf>=2.0
+pdfplumber>=0.11
+flask>=3.0
+mammoth>=1.8
+python-docx>=1.1
+openpyxl>=3.1
+beautifulsoup4>=4.12
+psutil>=5.9
