@@ -8,6 +8,14 @@
 - 全程本地处理，装好后可离线
 - 支持中文路径
 
+## 使用声明
+
+- **软件开发者：sheepgao**
+- **允许个人免费使用，商用请联系开发者**
+
+商用授权请通过 GitHub 仓库联系作者：<https://github.com/sheep-gy>。
+本软件采用 [PolyForm Noncommercial 1.0.0](LICENSE)，个人/非商业用途免费；商用需另行授权。
+
 ![主界面](docs/images/gui-main.png)
 
 <p align="center"><i>主界面：文件队列、输出设置、并发/设备、进度与日志</i></p>
@@ -322,6 +330,15 @@ pdf2md-eia/
 
 ---
 
-## License
+## License / 使用声明
 
-[MIT](LICENSE)
+本软件采用 **PolyForm Noncommercial 1.0.0**：
+
+- 个人、研究、教学、非商业组织可免费使用；
+- **商用必须联系开发者另行授权**；
+- 完整条款见 [LICENSE](LICENSE)。
+
+Required Notice: Copyright 2026 sheepgao
+
+软件开发者：**sheepgao**  
+商用授权请联系：<https://github.com/sheep-gy>

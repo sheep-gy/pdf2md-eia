@@ -221,3 +221,12 @@ venv 脚本记录绝对路径，换路径可能失效；不要只拷 exe。
 4. 不要把客户 PDF 发到未授权的第三方服务；本程序默认全程本地处理。
 5. 不要在公网暴露 `serve`；必须设 token。
 6. 不要调用内部 `_job` 子命令，除非你在改这个程序本身。
+
+
+---
+
+## 使用声明
+
+- 软件开发者：**sheepgao**
+- 允许个人免费使用，**商用请联系开发者**
+- 许可证：PolyForm Noncommercial 1.0.0；Required Notice: Copyright 2026 sheepgao

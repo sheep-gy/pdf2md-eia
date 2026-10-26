@@ -11,6 +11,7 @@ DOC_DATAS = [
     (str(PROJECT / "AI调用说明.md"), "."),
     (str(PROJECT / "AI调用示例.py"), "."),
     (str(PROJECT / "API接口.md"), "."),
+    (str(PROJECT / "LICENSE"), "."),
     (str(PROJECT / "tools" / "uv.exe"), "tools"),
 ]
 SKILL = PROJECT / "skill" / "pdf-to-md-eia"

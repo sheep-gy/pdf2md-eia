@@ -20,7 +20,7 @@ def main():
     if (HERE / "使用说明_GUI.txt").exists():
         shutil.copyfile(HERE / "使用说明_GUI.txt", DIST / "使用说明.txt")
     # PyInstaller 的 datas 会进 _internal；给人和 AI 看的文档复制到包根目录
-    for name in ("AI调用说明.md", "AI调用示例.py", "API接口.md"):
+    for name in ("AI调用说明.md", "AI调用示例.py", "API接口.md", "LICENSE"):
         src = HERE / name
         if src.exists():
             shutil.copyfile(src, DIST / name)

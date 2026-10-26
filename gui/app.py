@@ -357,12 +357,27 @@ class App(tk.Tk):
         self.skip_var = tk.BooleanVar(value=True)
         self.overwrite_var = tk.BooleanVar(value=False)
         self.keep_json_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(st, text="跳过少于 20 页的 PDF",
-                        variable=self.skip_var).pack(anchor="w", padx=8)
-        ttk.Checkbutton(st, text="覆盖已存在的 md",
-                        variable=self.overwrite_var).pack(anchor="w", padx=8)
-        ttk.Checkbutton(st, text="保留 middle JSON（调试用）",
-                        variable=self.keep_json_var).pack(anchor="w", padx=8)
+        opts = ttk.Frame(st)
+        opts.pack(fill="x", padx=8)
+        left = ttk.Frame(opts)
+        left.pack(side="left", fill="y")
+        ttk.Checkbutton(left, text="跳过少于 20 页的 PDF",
+                        variable=self.skip_var).pack(anchor="w")
+        ttk.Checkbutton(left, text="覆盖已存在的 md",
+                        variable=self.overwrite_var).pack(anchor="w")
+        ttk.Checkbutton(left, text="保留 middle JSON（调试用）",
+                        variable=self.keep_json_var).pack(anchor="w")
+
+        decl = tk.Frame(opts, bg="#f7f9fc", highlightbackground="#c9d3e0",
+                        highlightthickness=1)
+        decl.pack(side="right", anchor="n", padx=(14, 0))
+        tk.Label(decl, text="软件开发者：sheepgao", bg="#f7f9fc",
+                 fg="#333", font=("Microsoft YaHei UI", 9, "bold"),
+                 anchor="e").pack(anchor="e", padx=8, pady=(5, 0))
+        tk.Label(decl, text="允许个人免费使用，商用请联系开发者",
+                 bg="#f7f9fc", fg="#555", font=("Microsoft YaHei UI", 8),
+                 anchor="e", justify="right", wraplength=190).pack(
+            anchor="e", padx=8, pady=(0, 5))
 
         btns = ttk.Frame(st)
         btns.pack(fill="x", padx=8, pady=6)
