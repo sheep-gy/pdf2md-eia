@@ -14,11 +14,11 @@ VSVersionInfo(
       StringTable('080404b0', [
         StringStruct('CompanyName', 'OPC'),
         StringStruct('FileDescription', 'EIA report to md 环评报告转 Markdown'),
-        StringStruct('FileVersion', '2.0.0.0'),
+        StringStruct('FileVersion', '2.0.1.0'),
         StringStruct('InternalName', 'EIA-report-to-md'),
         StringStruct('OriginalFilename', 'EIA-report-to-md.exe'),
         StringStruct('ProductName', 'EIA report to md'),
-        StringStruct('ProductVersion', '2.0.0.0')
+        StringStruct('ProductVersion', '2.0.1.0')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [2052, 1200])])

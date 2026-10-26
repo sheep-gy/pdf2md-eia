@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from office_convert import convert_any, SUPPORTED
 from eia_md.gpu import detect as detect_gpu
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.1"
 app = Flask(__name__)
 JOBS = {}
 LOCK = threading.Lock()

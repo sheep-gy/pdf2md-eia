@@ -13,7 +13,7 @@ from tkinter import filedialog, messagebox, scrolledtext, ttk
 
 from . import envcheck, files, settings
 from .install_wizard import InstallWizard, LegacyInstallDialog
-from .jobrunner import Job, JobRunner
+from .jobrunner import Job, JobRunner, plan_parallel
 from .platform_win import (acquire_single_instance, activate_window,
                            free_ram_gb, cpu_physical, open_path,
                            recommend_workers, set_dpi_awareness,
@@ -30,6 +30,8 @@ PHASE_CN = {
     "probe_done": "页面分析完成",
     "mineru": "解析正文/表格",
     "mineru_done": "正文解析完成",
+    "mineru_parallel": "分页并行解析",
+    "mineru_parallel_fallback": "分页失败，回退整本解析",
     "repair": "检查漏字页",
     "repair_scan": "漏字页检查完成",
     "repair_done": "漏字页补跑完成",
@@ -351,7 +353,7 @@ class App(tk.Tk):
         ttk.Spinbox(grid, from_=1, to=3, width=5, textvariable=self.workers_var).grid(
             row=0, column=5, sticky="w", padx=4)
         ttk.Label(st, text="basic 约 3–4 秒/页；standard 更慢但漏字更少。"
-                           "每份约 5–6 GB 内存。",
+                           "单个大 PDF 会自动拆页并行；并发 2 时约 6–8 GB 内存。",
                   foreground="#666", wraplength=380).pack(anchor="w", padx=8, pady=(0, 2))
 
         self.skip_var = tk.BooleanVar(value=True)
@@ -554,6 +556,11 @@ class App(tk.Tk):
                   f'内存 {hw.ram_total_gb:.1f} GB · '
                   f'{"GPU: " + gpu["name"] if gpu else "CPU"} · '
                   f'建议并发 {hw.recommended_workers}')
+        if (self.cfg.workers <= 0 and hw.recommended_workers
+                and int(self.workers_var.get() or 1) <= 1):
+            self.cfg.workers = max(1, min(3, int(hw.recommended_workers)))
+            self.workers_var.set(self.cfg.workers)
+            self.append_log(f"已按硬件自检将并发设为 {self.cfg.workers}。")
         if rep.ready:
             self.set_banner("运行环境就绪", detail, "ok")
             self.env_status_var.set(f'环境就绪 · {self.cfg.device.upper()} · '
@@ -709,17 +716,23 @@ class App(tk.Tk):
             messagebox.showinfo("没有可转换的文件",
                                 "请添加 PDF，或检查是否都已被跳过。", parent=self)
             return
-        # 并发上限按可用内存再算一次
+        # 并发上限按可用内存再算一次；用户坚持时可以按自己的设置跑
         eff, reason = recommend_workers(free_ram_gb(), cpu_physical())
-        workers = min(self.cfg.workers, eff)
-        if self.cfg.workers > eff:
-            if not messagebox.askyesno(
+        chosen = max(1, min(3, int(self.cfg.workers or 1)))
+        if chosen > eff:
+            if messagebox.askyesno(
                     "并发建议",
-                    f"当前设置 {self.cfg.workers} 个并发，但{reason}。\n"
-                    f"建议改为 {eff} 个，是否继续？", parent=self):
-                return
-            workers = eff
-        self.cfg.workers = workers
+                    f"当前设置 {chosen} 个并发，但{reason}。\n\n"
+                    f"点“是”仍按 {chosen} 个继续；点“否”改为建议的 {eff} 个。",
+                    parent=self):
+                chosen = min(3, chosen)
+            else:
+                chosen = eff
+        # 只有一个文件时，把并发转成单文件内部的“分页并行”；
+        # 多个文件时仍按文件级并发。
+        file_workers, page_workers, cpu_threads = plan_parallel(
+            jobs, chosen, free_ram_gb())
+        self.cfg.workers = chosen
         settings.save_config(self.cfg)
         for iid in [j.iid for j in jobs]:
             self.rows[iid]["status"] = "等待"
@@ -728,9 +741,17 @@ class App(tk.Tk):
         self.done_jobs = 0
         self.progress.configure(maximum=max(1, self.total_jobs), value=0)
         self.progress_var.set(f"0 / {self.total_jobs}")
-        self.append_log(f"开始转换 {self.total_jobs} 份，{workers} 个并发，"
-                        f"设备 {self.cfg.device}，档位 {self.cfg.tier}。")
-        self.runner = JobRunner(self.cfg, self.events, workers=workers)
+        if page_workers > 1:
+            extra = f"（单文件分页并行 {page_workers} 路，每路 {cpu_threads} 线程）"
+        elif file_workers > 1:
+            extra = f"（每个文件 1 路，每路 {cpu_threads} 线程）"
+        else:
+            extra = "（单文件单路，引擎默认线程）"
+        self.append_log(f"开始转换 {self.total_jobs} 份，{file_workers} 个文件并发"
+                        f"{extra}，设备 {self.cfg.device}，档位 {self.cfg.tier}。")
+        self.runner = JobRunner(self.cfg, self.events, workers=file_workers,
+                                page_workers=page_workers,
+                                cpu_threads=cpu_threads)
         self.runner.start(jobs)
         self._refresh_start_state()
 
@@ -947,10 +968,10 @@ class App(tk.Tk):
         if hw:
             extra = (f"\nCPU: {hw.cpu_physical} 核 / {hw.cpu_logical} 线程"
                      f"\n内存: {hw.ram_total_gb:.1f} GB"
-                     f"\nGPU: {(hw.gpu or {}).get('name') or '未检测到'}")
+                     f"\n显卡: {hw.gpu_note}")
         messagebox.showinfo(
             "关于",
-            f"EIA report to md 2.0.0\n"
+            f"EIA report to md 2.0.1\n"
             f"环境: {self.cfg.env_dir}\n"
             f"模型: {self.cfg.mineru_home}{extra}",
             parent=self)

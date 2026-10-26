@@ -12,7 +12,7 @@ from pathlib import Path
 from . import settings
 from .platform_win import (CREATE_NO_WINDOW, cpu_logical, cpu_physical,
                            disk_free_gb, free_ram_gb, nvidia_info,
-                           recommend_workers, total_ram_gb)
+                           recommend_workers, total_ram_gb, video_controllers)
 
 
 @dataclass
@@ -33,6 +33,7 @@ class Hardware:
     ram_total_gb: float = 0
     ram_free_gb: float = 0
     gpu: dict | None = None
+    video: list[str] = field(default_factory=list)
     disk_free_gb: float = 0
     recommended_workers: int = 1
     worker_reason: str = ""
@@ -177,6 +178,7 @@ def hardware_report(cfg) -> Hardware:
     total_ram = total_ram_gb()
     free_ram = free_ram_gb()
     gpu = nvidia_info()
+    video = video_controllers()
     disk = disk_free_gb(cfg.env_dir if Path(cfg.env_dir).exists() else cfg.env_dir)
     workers, reason = recommend_workers(free_ram, phys)
     if gpu and gpu.get("vram_gb", 0) >= 8:
@@ -189,11 +191,15 @@ def hardware_report(cfg) -> Hardware:
                 f"建议仍用 CPU")
     else:
         device = "cpu"
-        note = "未检测到 NVIDIA 独显，使用 CPU"
+        igpu = next((x for x in video
+                     if any(k in x.lower() for k in ("amd", "radeon", "intel", "graphics"))),
+                    None)
+        note = (f"检测到 {igpu}（集成显卡，MinerU 不支持 CUDA 加速），使用 CPU"
+                if igpu else "未检测到 NVIDIA 独显，使用 CPU")
     return Hardware(
         cpu_logical=log, cpu_physical=phys,
         ram_total_gb=total_ram, ram_free_gb=free_ram,
-        gpu=gpu, disk_free_gb=disk,
+        gpu=gpu, video=video, disk_free_gb=disk,
         recommended_workers=workers, worker_reason=reason,
         recommended_device=device, gpu_note=note,
     )

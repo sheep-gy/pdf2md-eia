@@ -160,12 +160,35 @@ def nvidia_info() -> dict | None:
         return None
 
 
+def video_controllers() -> list[str]:
+    """列出本机显示适配器（包含集显），用于说明 CUDA 是否可用。"""
+    if os.name != "nt":
+        return []
+    try:
+        p = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_VideoController | "
+             "Select-Object -ExpandProperty Name"],
+            capture_output=True, text=True, timeout=15,
+            creationflags=CREATE_NO_WINDOW)
+        if p.returncode == 0:
+            return [x.strip() for x in (p.stdout or "").splitlines() if x.strip()]
+    except Exception:
+        pass
+    return []
+
+
 def recommend_workers(free_gb: float, physical_cores: int) -> tuple[int, str]:
-    """按可用内存与物理核数给出并发建议（每份约 5-6 GB）。"""
-    ram_n = max(1, int((free_gb - 3) // 6))
-    cpu_n = max(1, physical_cores // 4)
+    """按可用内存与物理核数给出并发建议。
+
+    MinerU basic 单进程实测峰值约 2.5–3.5 GB（大报告按 4 GB 预留），
+    不再使用早期“每进程 5–6 GB”的保守估计，否则 23 GB 机器会被压成 1 路。
+    """
+    per_worker_gb = 2.8
+    ram_n = max(1, int(max(0.0, free_gb - 1.5) // per_worker_gb))
+    cpu_n = max(1, physical_cores // 2)
     n = max(1, min(3, ram_n, cpu_n))
-    reason = (f"可用内存 {free_gb:.1f} GB（每进程约 5–6 GB），"
+    reason = (f"可用内存 {free_gb:.1f} GB（每进程约 2.5–3 GB），"
               f"{physical_cores} 个物理核 → 建议 {n} 个并发")
     return n, reason
 
@@ -173,6 +196,7 @@ def recommend_workers(free_gb: float, physical_cores: int) -> tuple[int, str]:
 def acquire_single_instance(name: str = r"Local\PDF2MD_GUI_v2"):
     if os.name != "nt":
         return True, None
+    name = os.environ.get("PDF2MD_INSTANCE") or name
     try:
         h = ctypes.windll.kernel32.CreateMutexW(None, False, name)
         err = ctypes.windll.kernel32.GetLastError()

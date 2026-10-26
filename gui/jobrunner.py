@@ -15,7 +15,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import settings
-from .platform_win import CREATE_NO_WINDOW, CREATE_NEW_PROCESS_GROUP, kill_tree
+from .platform_win import (CREATE_NO_WINDOW, CREATE_NEW_PROCESS_GROUP,
+                           cpu_physical, kill_tree)
 
 JOB_TIMEOUT = 6 * 3600
 
@@ -48,11 +49,35 @@ class Job:
             self.qa_path = self.out_dir / (self.out_stem + "_qa.json")
 
 
+def plan_parallel(jobs, chosen: int, free_gb: float):
+    """决定文件级并发、单文件分页并行路数、每路线程数。"""
+    chosen = max(1, min(3, int(chosen or 1)))
+    file_workers = chosen
+    page_workers = 1
+    if len(jobs) == 1:
+        file_workers = 1
+        job = jobs[0]
+        if (getattr(job, "fmt", "") == "pdf" and chosen > 1
+                and int(getattr(job, "pages", 0) or 0) >= 20):
+            max_by_ram = max(1, int(max(0.0, float(free_gb) - 1.5) // 3.0))
+            page_workers = min(chosen, max_by_ram)
+    total = max(1, file_workers * page_workers)
+    cpu_threads = max(1, cpu_physical() // total) if total > 1 else 0
+    return file_workers, page_workers, cpu_threads
+
+
 class JobRunner:
-    def __init__(self, cfg, events: queue.Queue, workers: int = 1):
+    def __init__(self, cfg, events: queue.Queue, workers: int = 1,
+                 page_workers: int = 1, cpu_threads: int = 0):
         self.cfg = cfg
         self.events = events
         self.workers = max(1, min(3, int(workers)))
+        self.page_workers = max(1, min(3, int(page_workers or 1)))
+        self.cpu_threads = int(cpu_threads or 0)
+        if not self.cpu_threads:
+            total = max(1, self.workers * self.page_workers)
+            if total > 1:
+                self.cpu_threads = max(1, cpu_physical() // total)
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._procs: dict[str, subprocess.Popen] = {}
@@ -179,6 +204,8 @@ class JobRunner:
             "result_file": str(result),
             "pages_known": job.pages,
             "fmt": job.fmt,
+            "page_workers": self.page_workers,
+            "cpu_threads": self.cpu_threads,
             "parent_pid": os.getpid(),
         }
         job_json.write_text(json.dumps(payload, ensure_ascii=False, indent=1),

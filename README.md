@@ -234,7 +234,10 @@ flowchart TB
 **GUI / 任务**
 - Tkinter 单窗口；每份文件一个子进程，进度写 `progress.jsonl`。
 - 停止 = `taskkill /F /T` 杀进程树，5 秒内生效；窗口关闭时会清理子进程。
-- 并发按可用内存和物理核数建议，最大 3。
+- 并发按可用内存和物理核数建议，最大 3；只有一个大 PDF 时自动拆页并行。
+- 每路 MinerU 按“物理核数 ÷ 并发路数”分配 CPU 线程，避免多路超卖。
+- 实测：basic 20 页单路约 102 秒，拆 2 路约 54 秒，输出逐字节一致。
+- 显卡只支持 NVIDIA CUDA；AMD / Intel 集显不能用于 MinerU 加速，仍走 CPU。
 
 **安装器**
 - uv → venv → pip（阿里云 → 清华 → 官方 PyPI）→ 模型（ModelScope → HuggingFace）→ CUDA/LibreOffice → 校验。

@@ -374,7 +374,7 @@ def convert_legacy(path: Path, out_dir: Path, out_stem: str | None = None,
 # ---------------- 统一入口 ----------------
 def convert_any(path, out_dir, overwrite=False, keep_json=False, pages="all",
                 device="auto", tier="basic", tmp_dir=None, on_event=None,
-                out_stem=None):
+                out_stem=None, page_workers=1, cpu_threads=0):
     path = Path(path)
     out_dir = Path(out_dir)
     fmt = file_format(path)
@@ -383,7 +383,8 @@ def convert_any(path, out_dir, overwrite=False, keep_json=False, pages="all",
         return convert_one(path, out_dir, overwrite=overwrite,
                            keep_json=keep_json, pages=pages, device=device,
                            tier=tier, tmp_dir=tmp_dir, on_event=on_event,
-                           out_stem=out_stem)
+                           out_stem=out_stem, page_workers=page_workers,
+                           cpu_threads=cpu_threads)
     md_path, _ = _out_paths(path, out_dir, out_stem)
     if md_path.exists() and not overwrite:
         if on_event:

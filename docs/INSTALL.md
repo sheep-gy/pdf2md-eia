@@ -6,7 +6,7 @@
 |---|---|
 | 系统 | Windows 10/11 x64（桌面版）；CLI/API 源码可跨平台 |
 | Python | 3.12（MinerU 4.x 推荐） |
-| 内存 | 单进程 5–6 GB；23 GB 建议 2 并发，16 GB 建议 1–2 |
+| 内存 | 单进程约 2.5–3 GB（大报告按 4 GB 预留）；23 GB 建议 2 并发，16 GB 建议 1–2 |
 | 显卡 | 可选。NVIDIA、显存 ≥ 8 GB 时可装 CUDA 后端 |
 | 磁盘 | Python 环境约 0.8 GB；模型约 2 GB；Office 支持 LibreOffice 约 350 MB |
 | 网络 | 首次安装依赖需要；之后可离线 |
@@ -134,7 +134,7 @@ dist\EIA-report-to-md\
 | LibreOffice 安装失败 | 检查 winget、UAC、网络；或手动安装 LibreOffice |
 | 杀毒软件报警 | PyInstaller 程序常被误报，添加信任 |
 | 模型下载慢 | 默认 ModelScope；也可设 `MINERU_MODEL_SOURCE=huggingface` 或手动下载 |
-| 内存不足 | 降低并发；每进程约 5–6 GB |
+| 内存不足 | 降低并发；每进程约 2.5–3 GB；只有一个大 PDF 时会自动拆页并行 |
 | 首次安装失败 | 弹窗看失败步骤；换镜像重试；已完成的步骤不会重下 |
 
 ---

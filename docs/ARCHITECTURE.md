@@ -213,7 +213,11 @@ sequenceDiagram
 - 每个文件一个子进程，崩溃不带走 GUI；
 - 进度写 `progress.jsonl`，不依赖 stdout（窗口化 exe 的 stdout 为 None）；
 - 停止用 `taskkill /F /T` 杀进程树，5 秒内生效；
-- 并发按可用内存（每进程 5–6 GB）和物理核数建议，最大 3；
+- 并发按可用内存（每进程约 2.5–3 GB）和物理核数建议，最大 3；
+- 只有一个 PDF 且页数 ≥20 时，按内存自动拆成 2–3 路 MinerU 分页并行，
+  合并时按 `page_idx` 排序；缺页/子进程失败会自动回退整本单路解析；
+- 多路时按 `物理核数 ÷ 总路数` 设置 `MINERU_INTRA_OP_NUM_THREADS`，
+  避免每个进程都开 4 线程导致超卖；
 - 配置在 `%LOCALAPPDATA%\PDF2MD\config.json`，日志在 `logs\`，任务临时目录在 `jobs\`。
 
 ---
@@ -263,9 +267,12 @@ flowchart TB
 | PDF standard 补漏 | 30–40 秒/页 |
 | DOCX | 秒级 |
 | XLSX | 秒级 |
-| 每进程内存 | 5–6 GB |
+| 每进程内存 | basic 10 页峰值约 2.7 GB；按 2.5–3 GB/路估算 |
+| 单文件分页并行 | ≥20 页自动拆 2 路；20 页实测 102s → 54s，输出一致 |
 
-23 GB 内存建议 2 个并发；16 GB 建议 1–2；8 GB 建议 1。
+23 GB 内存（当前可用约 8.5 GB）建议 2 个并发；16 GB 建议 1–2；8 GB 建议 1。
+AMD / Intel 集显不支持 MinerU 的 CUDA 后端，只能使用 CPU；NVIDIA 独显且
+`torch.cuda.is_available()` 为 true 时才建议 `cuda`。
 
 ---
 

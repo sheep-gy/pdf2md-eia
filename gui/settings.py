@@ -27,6 +27,9 @@ def resource_dir() -> Path:
 
 
 def data_dir() -> Path:
+    override = os.environ.get("PDF2MD_DATA_DIR")
+    if override:
+        return Path(override)
     if is_frozen() and (app_dir() / "portable.ini").exists():
         return app_dir() / "data"
     base = os.environ.get("LOCALAPPDATA") or str(Path.home())
@@ -67,8 +70,8 @@ def default_home_dir() -> Path:
 
 @dataclass
 class Config:
-    schema: int = 1
-    app_version: str = "2.0.0"
+    schema: int = 2
+    app_version: str = "2.0.1"
     env_dir: str = ""
     mineru_home: str = ""
     mineru_py: str = ""
@@ -76,7 +79,7 @@ class Config:
     uv_path: str = ""
     tier: str = "basic"
     device: str = "cpu"
-    workers: int = 1
+    workers: int = 0          # 0 = 按硬件自检推荐
     out_mode: str = "same"          # same | custom
     out_dir: str = ""
     preserve_tree: bool = True
@@ -134,6 +137,18 @@ def load_config() -> Config:
     merged = asdict(defaults)
     if isinstance(data, dict):
         merged.update({k: v for k, v in data.items() if k in merged})
+    # 旧版把并发写死成 1；升级后改为“自动”，由硬件自检给建议值
+    try:
+        old_schema = int(data.get("schema", 1) or 1) if isinstance(data, dict) else 1
+    except Exception:
+        old_schema = 1
+    if old_schema < 2:
+        merged["schema"] = 2
+        try:
+            if int(merged.get("workers", 1) or 1) <= 1:
+                merged["workers"] = 0
+        except Exception:
+            merged["workers"] = 0
     try:
         return Config(**merged)
     except Exception:

@@ -133,7 +133,7 @@ def main():
         return
     if cmd in ("version", "-v", "--version"):
         from eia_md.gpu import detect
-        print(json.dumps({"version": "2.0.0", "gpu": detect()},
+        print(json.dumps({"version": "2.0.1", "gpu": detect()},
                          ensure_ascii=False, indent=2))
         return
     if cmd in ("help", "-h", "--help"):

@@ -73,6 +73,8 @@ def main(argv):
             tier=job.get("tier", "basic"),
             tmp_dir=job.get("tmp_dir"),
             out_stem=job.get("out_stem"),
+            page_workers=int(job.get("page_workers") or 1),
+            cpu_threads=int(job.get("cpu_threads") or 0),
             on_event=lambda name, data: emit(name, **data),
         )
         result = {"ok": True, "result": r}

@@ -14,6 +14,7 @@ import subprocess
 import sys
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pymupdf
@@ -33,6 +34,26 @@ MINERU_ENV = {
 PY = os.environ.get("MINERU_PY", r"D:/mineru_env/Scripts/python.exe")
 MINERU = os.environ.get("MINERU_BIN", r"D:/mineru_env/Scripts/mineru-kit.exe")
 CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
+PARALLEL_MIN_PAGES = 20
+
+
+def apply_cpu_env(env, threads=0):
+    """把每个 MinerU 子进程的 CPU 线程数写入环境变量。
+
+    ONNX 默认只开 4 个 intra-op 线程；多文件并发时如果每个进程都开 4 个，
+    会超卖 CPU。这里按总并发路数均分物理核，单路时不覆盖引擎默认值。
+    """
+    try:
+        n = int(threads or 0)
+    except Exception:
+        n = 0
+    if n > 0:
+        n = max(1, n)
+        env["MINERU_INTRA_OP_NUM_THREADS"] = str(n)
+        env["MINERU_CPU_NUM_THREADS"] = str(n)
+        env["MINERU_INTER_OP_NUM_THREADS"] = "1"
+        env["MINERU_PDF_RENDER_THREADS"] = str(max(1, min(3, n)))
+    return env
 
 
 def safe_utf8(s):
@@ -64,7 +85,7 @@ def native_page_set(pdf_path):
 
 
 def run_mineru(pdf_path, out_json, pages="all", tier="basic", ocr_mode="auto",
-               device="auto", on_event=None):
+               device="auto", on_event=None, cpu_threads=0):
     if on_event:
         on_event("phase", {"name": "mineru", "tier": tier, "ocr_mode": ocr_mode})
     cmd = [MINERU, "parse", str(pdf_path), "-o", str(out_json),
@@ -72,6 +93,7 @@ def run_mineru(pdf_path, out_json, pages="all", tier="basic", ocr_mode="auto",
            "--ocr-mode", ocr_mode, "--format", "middle_json"]
     env = os.environ.copy()
     env.update(MINERU_ENV)
+    env = apply_cpu_env(env, cpu_threads)
     env, use_gpu = gpu.apply_env(env, device)
     t0 = time.time()
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -83,6 +105,103 @@ def run_mineru(pdf_path, out_json, pages="all", tier="basic", ocr_mode="auto",
     if on_event:
         on_event("phase", {"name": "mineru_done", "seconds": round(dt, 1)})
     return dt
+
+
+def _page_chunks(total, chunks):
+    """把 0 基页码平均切成连续区间，返回 [(start, end_inclusive), ...]。"""
+    total = max(0, int(total))
+    chunks = max(1, min(int(chunks or 1), max(1, total)))
+    base, rem = divmod(total, chunks)
+    out, start = [], 0
+    for i in range(chunks):
+        size = base + (1 if i < rem else 0)
+        if size > 0:
+            out.append((start, start + size - 1))
+            start += size
+    return out
+
+
+def _merge_middle(parts, total_pages):
+    """合并多个分页 middle_json；页码保持原 PDF 的 page_idx。"""
+    base = {}
+    pages = {}
+    for pf in parts:
+        data = json.loads(Path(pf).read_text(encoding="utf-8"))
+        if not base:
+            base = {k: v for k, v in data.items() if k != "pages"}
+        for pg in data.get("pages", []):
+            pages[int(pg["page_idx"])] = pg
+    complete = set(pages) == set(range(int(total_pages)))
+    out = dict(base)
+    out["pages"] = [pages[i] for i in sorted(pages)]
+    out["is_full_document"] = bool(complete)
+    return out, complete
+
+
+def run_mineru_parallel(pdf_path, out_json, total_pages, chunks, tier="basic",
+                        ocr_mode="auto", device="auto", cpu_threads=0,
+                        on_event=None):
+    """把一个大 PDF 按连续页拆成多路 MinerU 并行解析，再合并 middle_json。
+
+    每路都是独立进程、独立模型；页级输出与原 PDF 的 page_idx 一致。
+    合并后如果缺页或任一路失败，自动回退为整本单路解析，保证结果完整。
+    """
+    ev = on_event or (lambda *a, **k: None)
+    ranges = _page_chunks(total_pages, chunks)
+    if len(ranges) <= 1:
+        return run_mineru(pdf_path, out_json, pages="all", tier=tier,
+                          ocr_mode=ocr_mode, device=device,
+                          on_event=on_event, cpu_threads=cpu_threads)
+    per = max(1, int(cpu_threads or 0)) if cpu_threads else 0
+    out_json = Path(out_json)
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    parts = [out_json.with_name(out_json.stem + f".part{i}.json")
+             for i in range(len(ranges))]
+    ev("phase", {"name": "mineru_parallel", "chunks": len(ranges),
+                 "threads": per})
+    t0 = time.time()
+    err = None
+    try:
+        with ThreadPoolExecutor(max_workers=len(ranges)) as ex:
+            futs = [
+                ex.submit(
+                    run_mineru, pdf_path, part,
+                    pages=f"{a + 1}-{b + 1}", tier=tier, ocr_mode=ocr_mode,
+                    device=device, on_event=None, cpu_threads=per)
+                for part, (a, b) in zip(parts, ranges)
+            ]
+            for f in as_completed(futs):
+                f.result()
+    except Exception as exc:
+        err = exc
+    if err is None:
+        mid, complete = _merge_middle(parts, total_pages)
+        if complete:
+            out_json.write_text(
+                safe_utf8(json.dumps(mid, ensure_ascii=False)),
+                encoding="utf-8")
+            dt = time.time() - t0
+            for part in parts:
+                try:
+                    part.unlink()
+                except OSError:
+                    pass
+            ev("phase", {"name": "mineru_done", "seconds": round(dt, 1),
+                         "chunks": len(ranges)})
+            return dt
+        missing = sorted(set(range(int(total_pages))) -
+                         {int(pg["page_idx"]) for pg in mid.get("pages", [])})
+        err = RuntimeError(f"分页解析缺页: {missing[:20]}")
+    for part in parts:
+        try:
+            part.unlink()
+        except OSError:
+            pass
+    ev("phase", {"name": "mineru_parallel_fallback",
+                 "error": str(err)[:200]})
+    return run_mineru(pdf_path, out_json, pages="all", tier=tier,
+                      ocr_mode=ocr_mode, device=device, on_event=on_event,
+                      cpu_threads=cpu_threads)
 
 
 def norm_chars(s):
@@ -124,7 +243,7 @@ def cover_of(mid_page, fitz_page):
 
 
 def repair_pages(pdf_path, mid, chars, out_dir, threshold=0.95, max_pages=80,
-                 device="auto", tmp_dir=None, on_event=None):
+                 device="auto", tmp_dir=None, on_event=None, cpu_threads=0):
     """basic 漏字的原生页，用 standard 重跑并替换 middle_json 对应页。"""
     doc = pymupdf.open(pdf_path)
     bad = []
@@ -158,6 +277,7 @@ def repair_pages(pdf_path, mid, chars, out_dir, threshold=0.95, max_pages=80,
            "--pages", pages_arg, "--ocr-mode", "txt", "--format", "middle_json"]
     env = os.environ.copy()
     env.update(MINERU_ENV)
+    env = apply_cpu_env(env, cpu_threads)
     env, use_gpu = gpu.apply_env(env, device)
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        env=env, timeout=6 * 3600, creationflags=CREATE_NO_WINDOW)
@@ -295,7 +415,7 @@ def qa_doc(md_text, mid, pdf_path, chars):
 
 def convert_one(pdf_path, out_dir, overwrite=False, keep_json=False, pages="all",
                 device="auto", tier="basic", tmp_dir=None, on_event=None,
-                out_stem=None):
+                out_stem=None, page_workers=1, cpu_threads=0):
     ev = on_event or (lambda *a, **k: None)
     pdf_path = Path(pdf_path)
     out_dir = Path(out_dir)
@@ -315,12 +435,22 @@ def convert_one(pdf_path, out_dir, overwrite=False, keep_json=False, pages="all"
     ev("phase", {"name": "probe_done", "pages": len(chars),
                  "native_pages": len(native)})
     mode = "txt" if len(native) >= max(1, int(len(chars) * 0.9)) else "auto"
-    dt = run_mineru(pdf_path, tmp, pages=pages, tier=tier, ocr_mode=mode,
-                    device=device, on_event=ev)
+    try:
+        workers = int(page_workers or 1)
+    except Exception:
+        workers = 1
+    if pages == "all" and workers > 1 and len(chars) >= PARALLEL_MIN_PAGES:
+        dt = run_mineru_parallel(pdf_path, tmp, len(chars), workers, tier=tier,
+                                 ocr_mode=mode, device=device,
+                                 cpu_threads=cpu_threads, on_event=ev)
+    else:
+        dt = run_mineru(pdf_path, tmp, pages=pages, tier=tier, ocr_mode=mode,
+                        device=device, on_event=ev, cpu_threads=cpu_threads)
     mid = json.loads(tmp.read_text(encoding="utf-8"))
     ev("phase", {"name": "repair"})
     repaired = repair_pages(pdf_path, mid, chars, out_dir, device=device,
-                            tmp_dir=work_dir, on_event=ev)
+                            tmp_dir=work_dir, on_event=ev,
+                            cpu_threads=cpu_threads)
     ev("phase", {"name": "render"})
     overrides = native_overrides(pdf_path, mid, chars)
     md = render_doc(mid, str(pdf_path), native_pages=native)
@@ -333,6 +463,8 @@ def convert_one(pdf_path, out_dir, overwrite=False, keep_json=False, pages="all"
                "repaired_pages": repaired,
                "native_pages": sorted(k + 1 for k in overrides),
                "recovered_pages": recovered,
+               "page_workers": workers,
+               "cpu_threads": int(cpu_threads or 0),
                "total_sec": round(time.time() - t0, 1)})
     qa_path.write_text(safe_utf8(json.dumps(qa, ensure_ascii=False, indent=2)), encoding="utf-8")
     if not keep_json:

@@ -119,7 +119,7 @@ class InstallWizard(tk.Toplevel):
         self.spin_workers = ttk.Spinbox(row, from_=1, to=3, width=5,
                                         textvariable=self.workers_var)
         self.spin_workers.pack(side="left", padx=6)
-        ttk.Label(row, text="（按可用内存和物理核数推荐，每份约 5–6 GB）").pack(side="left")
+        ttk.Label(row, text="（按可用内存和物理核数推荐，每路约 2.5–3 GB）").pack(side="left")
         self.chk_gpu = ttk.Checkbutton(cfgf, text="使用 NVIDIA 独显",
                                        variable=self.gpu_var,
                                        command=self._refresh_state)
@@ -225,7 +225,8 @@ class InstallWizard(tk.Toplevel):
             f"CPU：{hw.cpu_physical} 个物理核 / {hw.cpu_logical} 线程",
             f"内存：{hw.ram_total_gb:.1f} GB（当前可用 {hw.ram_free_gb:.1f} GB）",
             ("显卡：" + (f'{gpu["name"]}，{gpu["vram_gb"]} GB 显存' if gpu
-                        else "未检测到 NVIDIA 独显")),
+                        else ("、".join(hw.video) + "（集显，CUDA 不可用）"
+                              if hw.video else "未检测到 NVIDIA 独显"))),
             f"磁盘：{hw.disk_free_gb:.1f} GB 可用",
             f"建议：{hw.recommended_workers} 个并发；{hw.gpu_note}",
         ]
@@ -249,7 +250,7 @@ class InstallWizard(tk.Toplevel):
         else:
             self.gpu_var.set(False)
             self.chk_gpu.configure(state="disabled")
-            self.gpu_hint.configure(text="未检测到 NVIDIA 独显，使用 CPU")
+            self.gpu_hint.configure(text=hw.gpu_note)
 
         self._refresh_state()
         self.btn_primary.configure(state="normal")
