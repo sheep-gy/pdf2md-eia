@@ -228,5 +228,6 @@ venv 脚本记录绝对路径，换路径可能失效；不要只拷 exe。
 ## 使用声明
 
 - 软件开发者：**sheepgao**
-- 允许个人免费使用，**商用请联系开发者**
+- 个人免费使用，**商用联系开发者**
+- QQ：**277062599**
 - 许可证：PolyForm Noncommercial 1.0.0；Required Notice: Copyright 2026 sheepgao

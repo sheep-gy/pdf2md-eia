@@ -371,13 +371,19 @@ class App(tk.Tk):
         decl = tk.Frame(opts, bg="#f7f9fc", highlightbackground="#c9d3e0",
                         highlightthickness=1)
         decl.pack(side="right", anchor="n", padx=(14, 0))
+        tk.Label(decl, text="声明", bg="#f7f9fc", fg="#333",
+                 font=("Microsoft YaHei UI", 9, "bold"),
+                 anchor="center").pack(fill="x", padx=8, pady=(5, 2))
         tk.Label(decl, text="软件开发者：sheepgao", bg="#f7f9fc",
-                 fg="#333", font=("Microsoft YaHei UI", 9, "bold"),
-                 anchor="e").pack(anchor="e", padx=8, pady=(5, 0))
-        tk.Label(decl, text="允许个人免费使用，商用请联系开发者",
+                 fg="#333", font=("Microsoft YaHei UI", 9),
+                 anchor="center").pack(fill="x", padx=8)
+        tk.Label(decl, text="个人免费使用，商用联系开发者",
                  bg="#f7f9fc", fg="#555", font=("Microsoft YaHei UI", 8),
-                 anchor="e", justify="right", wraplength=190).pack(
-            anchor="e", padx=8, pady=(0, 5))
+                 anchor="center", justify="center", wraplength=300).pack(
+            fill="x", padx=8, pady=(2, 0))
+        tk.Label(decl, text="QQ277062599", bg="#f7f9fc", fg="#555",
+                 font=("Microsoft YaHei UI", 8),
+                 anchor="center").pack(fill="x", padx=8, pady=(2, 5))
 
         btns = ttk.Frame(st)
         btns.pack(fill="x", padx=8, pady=6)

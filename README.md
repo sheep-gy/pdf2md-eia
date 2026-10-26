@@ -11,7 +11,8 @@
 ## 使用声明
 
 - **软件开发者：sheepgao**
-- **允许个人免费使用，商用请联系开发者**
+- **个人免费使用，商用联系开发者**
+- **QQ：277062599**
 
 商用授权请通过 GitHub 仓库联系作者：<https://github.com/sheep-gy>。
 本软件采用 [PolyForm Noncommercial 1.0.0](LICENSE)，个人/非商业用途免费；商用需另行授权。
@@ -341,4 +342,4 @@ pdf2md-eia/
 Required Notice: Copyright 2026 sheepgao
 
 软件开发者：**sheepgao**  
-商用授权请联系：<https://github.com/sheep-gy>
+商用授权请联系：QQ **277062599** 或 <https://github.com/sheep-gy>
