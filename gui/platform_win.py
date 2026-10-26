@@ -182,16 +182,58 @@ def acquire_single_instance(name: str = r"Local\PDF2MD_GUI_v2"):
 
 
 def activate_window(title: str) -> None:
+    """把已运行的主窗口（以及可能存在的向导）恢复并带到前台。"""
     if os.name != "nt":
         return
-    try:
-        hwnd = ctypes.windll.user32.FindWindowW(None, title)
-        if hwnd:
-            ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-            ctypes.windll.user32.SetForegroundWindow(hwnd)
-    except Exception:
-        pass
+    u = ctypes.windll.user32
+    titles = [title, "PDF转MD · 首次运行自检",
+              "安装 LibreOffice（旧版 DOC/XLS）"]
+    seen = set()
+    for t in titles:
+        try:
+            hwnd = u.FindWindowW(None, t)
+            if not hwnd or hwnd in seen:
+                continue
+            seen.add(hwnd)
+            if u.IsIconic(hwnd):
+                u.ShowWindow(hwnd, 9)   # SW_RESTORE
+            else:
+                u.ShowWindow(hwnd, 5)   # SW_SHOW
+            u.BringWindowToTop(hwnd)
+            u.SetForegroundWindow(hwnd)
+        except Exception:
+            pass
+    restore_aux_windows()
 
 
 def open_log_folder(path: Path) -> None:
     open_path(path)
+
+
+def restore_aux_windows() -> None:
+    """枚举所有同标题的向导/对话框窗口，把隐藏或最小化的恢复出来。"""
+    if os.name != "nt":
+        return
+    u = ctypes.windll.user32
+    titles = {"PDF转MD · 首次运行自检", "安装 LibreOffice（旧版 DOC/XLS）"}
+    try:
+        CB = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        def _cb(hwnd, lparam):
+            try:
+                n = u.GetWindowTextLengthW(hwnd)
+                if n:
+                    buf = ctypes.create_unicode_buffer(n + 1)
+                    u.GetWindowTextW(hwnd, buf, n + 1)
+                    if buf.value in titles:
+                        if u.IsIconic(hwnd):
+                            u.ShowWindow(hwnd, 9)   # SW_RESTORE
+                        elif not u.IsWindowVisible(hwnd):
+                            u.ShowWindow(hwnd, 5)   # SW_SHOW
+                        u.BringWindowToTop(hwnd)
+            except Exception:
+                pass
+            return True
+        u.EnumWindows(CB(_cb), 0)
+    except Exception:
+        pass
+

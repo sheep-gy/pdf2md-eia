@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import queue
+import re
 import threading
 import time
 import tkinter as tk
@@ -15,7 +16,8 @@ from .install_wizard import InstallWizard, LegacyInstallDialog
 from .jobrunner import Job, JobRunner
 from .platform_win import (acquire_single_instance, activate_window,
                            free_ram_gb, cpu_physical, open_path,
-                           recommend_workers, set_dpi_awareness)
+                           recommend_workers, set_dpi_awareness,
+                           restore_aux_windows)
 
 APP_TITLE = "PDF转MD · 环评报告转 Markdown"
 STATUS_TAG = {
@@ -62,6 +64,7 @@ class App(tk.Tk):
         self.done_jobs = 0
         self._closing = False
         self._wizard = None
+        self._last_normal_geom = None
 
         self.title(APP_TITLE)
         self.minsize(1020, 660)
@@ -72,7 +75,10 @@ class App(tk.Tk):
         self._load_ui_from_cfg()
 
         self.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.bind("<Configure>", self._on_configure, add="+")
+        self.bind("<Map>", self._on_map, add="+")
         self.after(100, self._pump)
+        self.after(500, self._watch_children)
         self.after(300, self._start_env_check)
         self.after(700, self._maybe_first_run)
         if initial_paths:
@@ -107,10 +113,78 @@ class App(tk.Tk):
     def _restore_geometry(self):
         w = self.cfg.window or {}
         try:
-            self.geometry(f'{int(w.get("w",1180))}x{int(w.get("h",720))}+'
-                          f'{int(w.get("x",80))}+{int(w.get("y",60))}')
+            sw = self.winfo_screenwidth()
+            sh = self.winfo_screenheight()
+            ww = max(1020, min(int(w.get("w", 1180)), sw - 40))
+            hh = max(660, min(int(w.get("h", 720)), sh - 80))
+            x = max(0, min(int(w.get("x", 80)), sw - ww))
+            y = max(0, min(int(w.get("y", 60)), sh - hh))
+            self.geometry(f"{ww}x{hh}+{x}+{y}")
         except Exception:
             self.geometry("1180x720")
+
+    def _geometry_tuple(self):
+        """保存 wm_geometry 的外框尺寸，避免反复最小化/恢复越缩越小。"""
+        try:
+            g = self.geometry()
+            m = re.match(r"(\d+)x(\d+)([+-]\d+)([+-]\d+)$", g)
+            if m:
+                return tuple(int(x) for x in m.groups())
+        except Exception:
+            pass
+        return (self.winfo_width(), self.winfo_height(),
+                self.winfo_x(), self.winfo_y())
+
+    def _on_configure(self, event):
+        if event.widget is not self:
+            return
+        try:
+            if self.state() == "normal":
+                self._last_normal_geom = self._geometry_tuple()
+        except Exception:
+            pass
+
+    def _on_map(self, event):
+        if event.widget is not self:
+            return
+        # 主窗口恢复时，把可能还最小化的向导/对话框一起带回来
+        self.after(60, self._restore_children)
+
+    def _watch_children(self):
+        """主窗口正常时，自动把被 Windows 隐藏的向导/对话框带回来。"""
+        try:
+            if not self._closing and self.state() == "normal" and self.winfo_ismapped():
+                self._restore_children()
+        except Exception:
+            pass
+        if not self._closing:
+            self.after(500, self._watch_children)
+
+    def _restore_children(self):
+        for w in (self._wizard, getattr(self, "_legacy_dialog", None)):
+            if not w:
+                continue
+            try:
+                if not w.winfo_exists():
+                    continue
+                if w.state() in ("iconic", "withdrawn") or not w.winfo_ismapped():
+                    w.deiconify()
+                w.lift()
+            except Exception:
+                pass
+        try:
+            restore_aux_windows()
+        except Exception:
+            pass
+
+    def _reset_window(self):
+        try:
+            self.state("normal")
+            self.geometry("1180x720+80+60")
+            self.lift()
+            self.focus_force()
+        except Exception:
+            pass
 
     def _build(self):
         self._build_menu()
@@ -168,6 +242,7 @@ class App(tk.Tk):
         f.add_command(label="清空列表", command=self.clear_all)
         f.add_separator()
         f.add_command(label="打开输出目录", command=self.open_output_dir)
+        f.add_command(label="重置窗口位置/大小", command=self._reset_window)
         f.add_command(label="退出", command=self._on_close)
         m.add_cascade(label="文件", menu=f)
 
@@ -870,8 +945,12 @@ class App(tk.Tk):
         self._scan_stop.set()
         try:
             self._save_ui_to_cfg()
-            self.cfg.window = {"w": self.winfo_width(), "h": self.winfo_height(),
-                               "x": self.winfo_x(), "y": self.winfo_y()}
+            # 最小化/最大化状态下不覆盖已保存的窗口尺寸，
+            # 否则 Windows 会把 720 报成 684，反复重开会越缩越小。
+            if self.state() == "normal":
+                geom = self._geometry_tuple()
+                self.cfg.window = {"w": geom[0], "h": geom[1],
+                                   "x": geom[2], "y": geom[3]}
         except Exception:
             pass
         settings.save_config(self.cfg)
