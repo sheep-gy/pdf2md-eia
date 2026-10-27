@@ -71,7 +71,7 @@ def default_home_dir() -> Path:
 @dataclass
 class Config:
     schema: int = 2
-    app_version: str = "2.0.1"
+    app_version: str = "2.0.2"
     env_dir: str = ""
     mineru_home: str = ""
     mineru_py: str = ""

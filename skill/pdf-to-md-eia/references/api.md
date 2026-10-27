@@ -8,7 +8,7 @@
 ## GET /health
 
 ```json
-{"status":"ok","version":"2.0.1","running":0,"jobs_total":12,"time":1792934474}
+{"status":"ok","version":"2.0.2","running":0,"jobs_total":12,"time":1792934474}
 ```
 
 ## GET /capabilities
@@ -18,7 +18,7 @@
 ```json
 {
   "service": "pdf2md-eia",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "gpu": {
     "hardware": true,
     "name": "NVIDIA GeForce RTX 4090",

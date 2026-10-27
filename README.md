@@ -238,6 +238,7 @@ flowchart TB
 - 每路 MinerU 按“物理核数 ÷ 并发路数”分配 CPU 线程，避免多路超卖。
 - 实测：basic 20 页单路约 102 秒，拆 2 路约 54 秒，输出逐字节一致。
 - 显卡只支持 NVIDIA CUDA；AMD / Intel 集显不能用于 MinerU 加速，仍走 CPU。
+- 长任务可 **文件 → 保存任务**（Ctrl+S）/ **加载任务**（Ctrl+L）中断续跑；已完成文件不重跑，缺失文件会标记。
 
 **安装器**
 - uv → venv → pip（阿里云 → 清华 → 官方 PyPI）→ 模型（ModelScope → HuggingFace）→ CUDA/LibreOffice → 校验。

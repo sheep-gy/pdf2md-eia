@@ -2,6 +2,7 @@
 """EIA report to md 主窗口（Tkinter）。"""
 from __future__ import annotations
 
+import json
 import os
 import queue
 import re
@@ -24,6 +25,7 @@ STATUS_TAG = {
     "等待": "wait", "扫描中": "wait", "转换中": "run",
     "完成": "ok", "失败": "bad", "跳过": "skip",
     "不支持": "skip", "需要LibreOffice": "skip", "已停止": "skip",
+    "文件缺失": "bad",
 }
 PHASE_CN = {
     "probe": "分析页面",
@@ -67,6 +69,7 @@ class App(tk.Tk):
         self._closing = False
         self._wizard = None
         self._last_normal_geom = None
+        self._task_dir = ""
 
         self.title(APP_TITLE)
         self.minsize(1020, 660)
@@ -243,6 +246,11 @@ class App(tk.Tk):
                       command=self.remove_selected)
         f.add_command(label="清空列表", command=self.clear_all)
         f.add_separator()
+        f.add_command(label="保存任务…", accelerator="Ctrl+S",
+                      command=self.save_task)
+        f.add_command(label="加载任务…", accelerator="Ctrl+L",
+                      command=self.load_task)
+        f.add_separator()
         f.add_command(label="打开输出目录", command=self.open_output_dir)
         f.add_command(label="重置窗口位置/大小", command=self._reset_window)
         f.add_command(label="退出", command=self._on_close)
@@ -265,6 +273,8 @@ class App(tk.Tk):
         m.add_cascade(label="帮助", menu=h)
         self.config(menu=m)
         self.bind("<Control-o>", lambda e: self.add_files())
+        self.bind("<Control-s>", lambda e: self.save_task())
+        self.bind("<Control-l>", lambda e: self.load_task())
         self.bind("<F5>", lambda e: self._start_env_check())
         self.bind("<Delete>", lambda e: self.remove_selected())
 
@@ -515,6 +525,7 @@ class App(tk.Tk):
             "pdf": pdf, "rel": rel, "fmt": fmt, "pages": pages, "kind": kind,
             "size": size, "status": status, "elapsed": "", "recall": "",
             "out": "", "error": error, "qa": {}, "iid": iid,
+            "resume_done": False,
         }
         self._update_row(iid)
         return iid
@@ -631,11 +642,15 @@ class App(tk.Tk):
                 return []
         items = []
         for iid, r in self.rows.items():
-            if r["status"] in ("不支持", "需要LibreOffice"):
+            if r["status"] in ("不支持", "需要LibreOffice", "文件缺失"):
                 continue
             if not files.is_supported(r["pdf"]):
                 r["status"] = "不支持"
                 self._update_row(iid)
+                continue
+            # 从任务文件加载的已完成项不再重跑，即使当前勾了“覆盖已存在的 md”；
+            # 需要重跑时右键“重转选中”会清掉 resume_done。
+            if r.get("resume_done"):
                 continue
             if r["status"] == "完成" and not self.cfg.overwrite:
                 continue
@@ -771,6 +786,7 @@ class App(tk.Tk):
             r["error"] = ""
             r["elapsed"] = ""
             r["recall"] = ""
+            r["resume_done"] = False
             self._update_row(iid)
 
     def _finish_all(self):
@@ -923,6 +939,159 @@ class App(tk.Tk):
                 self.tree.delete(iid)
         self.count_var.set(f"{len(self.rows)} 个文件")
 
+    # ---------- 任务保存 / 加载 ----------
+    TASK_KIND = "eia-md-task"
+    TASK_SCHEMA = 1
+    TASK_KEYS = ("tier", "device", "workers", "out_mode", "out_dir",
+                 "preserve_tree", "skip_lt_pages", "overwrite", "keep_json")
+
+    def save_task(self):
+        """把当前队列、选项和每个文件的状态存成 JSON，便于中断后续跑。"""
+        if not self.rows:
+            messagebox.showinfo("保存任务", "列表是空的，先添加文件。", parent=self)
+            return
+        self._save_ui_to_cfg()
+        ts = time.strftime("%Y%m%d_%H%M")
+        init_dir = self._task_dir or str(Path.home())
+        path = filedialog.asksaveasfilename(
+            parent=self, title="保存任务", defaultextension=".json",
+            filetypes=[("任务文件", "*.json"), ("所有文件", "*.*")],
+            initialdir=init_dir, initialfile=f"任务_{ts}.json")
+        if not path:
+            return
+
+        rows = []
+        for r in self.rows.values():
+            try:
+                out_dir, stem = files.plan_output(r["pdf"], self.cfg, r["rel"])
+                planned = str(out_dir / (stem + ".md"))
+            except Exception:
+                planned = r.get("out") or ""
+            rows.append({
+                "pdf": str(r["pdf"]),
+                "rel": "" if str(r.get("rel") or ".") == "." else str(r["rel"]),
+                "pages": r.get("pages", 0),
+                "kind": r.get("kind", ""),
+                "fmt": r.get("fmt", ""),
+                "size": round(float(r.get("size") or 0), 3),
+                "status": r.get("status", "等待"),
+                "out": r.get("out") or planned,
+                "elapsed": r.get("elapsed", ""),
+                "recall": r.get("recall", ""),
+                "error": r.get("error", ""),
+            })
+        data = {
+            "kind": self.TASK_KIND,
+            "schema": self.TASK_SCHEMA,
+            "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "settings": {k: getattr(self.cfg, k, None) for k in self.TASK_KEYS},
+            "files": rows,
+        }
+        try:
+            Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2),
+                                  encoding="utf-8")
+        except Exception as exc:
+            messagebox.showerror("保存任务", f"写入失败：{exc}", parent=self)
+            return
+        self._task_dir = str(Path(path).parent)
+        done = sum(1 for x in rows if x["status"] == "完成")
+        self.append_log(f"任务已保存：{path}（{len(rows)} 个文件，已完成 {done} 个）")
+        self.progress_var.set(f"任务已保存：{len(rows)} 个文件")
+
+    def load_task(self):
+        """加载任务文件：恢复队列和选项，已完成的文件不会再跑。"""
+        if self.runner and self.runner.is_running():
+            messagebox.showwarning("加载任务", "请先停止当前转换，再加载任务。",
+                                   parent=self)
+            return
+        init_dir = self._task_dir or str(Path.home())
+        path = filedialog.askopenfilename(
+            parent=self, title="加载任务",
+            filetypes=[("任务文件", "*.json"), ("所有文件", "*.*")],
+            initialdir=init_dir)
+        if not path:
+            return
+        try:
+            data = json.loads(Path(path).read_text(encoding="utf-8"))
+        except Exception as exc:
+            messagebox.showerror("加载任务", f"读取失败：{exc}", parent=self)
+            return
+        if data.get("kind") != self.TASK_KIND or not isinstance(data.get("files"), list):
+            messagebox.showerror("加载任务", "这不是本程序保存的任务文件。",
+                                 parent=self)
+            return
+        if self.rows and not messagebox.askyesno(
+                "加载任务", f"当前列表有 {len(self.rows)} 个文件，替换为任务里的列表？",
+                parent=self):
+            return
+
+        settings_data = data.get("settings") or {}
+        for k in self.TASK_KEYS:
+            if k in settings_data and settings_data[k] is not None:
+                setattr(self.cfg, k, settings_data[k])
+        self._load_ui_from_cfg()
+
+        self.clear_all()
+        resumed = done = missing = 0
+        for item in data["files"]:
+            raw = item.get("pdf") or ""
+            if not raw:
+                continue
+            pdf = Path(raw)
+            rel = Path(item["rel"]) if item.get("rel") else Path(".")
+            iid = self._add_row(pdf, rel, int(item.get("pages") or 0),
+                                item.get("kind", ""), "")
+            r = self.rows.get(iid)
+            if not r:
+                continue
+            if item.get("fmt"):
+                r["fmt"] = item["fmt"]
+            if item.get("size"):
+                r["size"] = float(item["size"])
+            r["elapsed"] = item.get("elapsed", "")
+            r["recall"] = item.get("recall", "")
+            r["error"] = item.get("error", "")
+            r["out"] = item.get("out", "")
+
+            if not r["out"]:
+                try:
+                    od, stem = files.plan_output(pdf, self.cfg, rel)
+                    r["out"] = str(od / (stem + ".md"))
+                except Exception:
+                    pass
+            saved_status = item.get("status", "等待")
+            out_path = Path(r["out"]) if r["out"] else None
+            out_ok = bool(out_path and out_path.exists())
+            if not pdf.exists():
+                r["status"] = "文件缺失"
+                missing += 1
+            elif saved_status in ("不支持", "需要LibreOffice"):
+                r["status"] = saved_status
+            elif saved_status == "完成" or out_ok:
+                r["status"] = "完成"
+                r["resume_done"] = True
+                done += 1
+            else:
+                r["status"] = "等待"
+                resumed += 1
+            self._paths.add(str(pdf.resolve()).casefold())
+            self._update_row(iid)
+
+        self._task_dir = str(Path(path).parent)
+        self.count_var.set(f"{len(self.rows)} 个文件")
+        self.progress.configure(maximum=max(1, len(self.rows)), value=0)
+        self.progress_var.set(
+            f"任务已加载：共 {len(self.rows)} · 已完成 {done} · 待继续 {resumed} "
+            f"· 缺失 {missing}")
+        self.append_log(
+            f"加载任务：{path}（共 {len(self.rows)}，已完成 {done}，"
+            f"待继续 {resumed}，文件缺失 {missing}）")
+        if missing:
+            messagebox.showwarning(
+                "部分文件缺失",
+                f"有 {missing} 个文件在原路径找不到，已标记为“文件缺失”，"
+                "请重新添加后再开始。", parent=self)
+
     def clear_all(self):
         if self.runner and self.runner.is_running():
             messagebox.showwarning("正在转换", "请先停止当前任务。", parent=self)
@@ -971,7 +1140,7 @@ class App(tk.Tk):
                      f"\n显卡: {hw.gpu_note}")
         messagebox.showinfo(
             "关于",
-            f"EIA report to md 2.0.1\n"
+            f"EIA report to md 2.0.2\n"
             f"环境: {self.cfg.env_dir}\n"
             f"模型: {self.cfg.mineru_home}{extra}",
             parent=self)

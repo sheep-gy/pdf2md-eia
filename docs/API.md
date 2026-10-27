@@ -2,7 +2,7 @@
 
 > 本文件与仓库根目录 `API接口.md` 同步；支持 PDF / DOCX / DOC / XLSX / XLS。
 
-> 本文件与 `skill/pdf-to-md-eia/references/api.md` 同步；服务端版本 2.0.1。
+> 本文件与 `skill/pdf-to-md-eia/references/api.md` 同步；服务端版本 2.0.2。
 
 默认地址：`http://<服务器IP>:8765`
 鉴权：启动时 `--token` 或 `PDF2MD_TOKEN`；请求头 `Authorization: Bearer <token>` 或 `X-API-Token: <token>`。
@@ -12,7 +12,7 @@
 ## GET /health
 
 ```json
-{"status":"ok","version":"2.0.1","running":0,"jobs_total":12,"time":1792934474}
+{"status":"ok","version":"2.0.2","running":0,"jobs_total":12,"time":1792934474}
 ```
 
 ## GET /capabilities
@@ -22,7 +22,7 @@
 ```json
 {
   "service": "pdf2md-eia",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "gpu": {
     "hardware": true,
     "name": "NVIDIA GeForce RTX 4090",
